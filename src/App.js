@@ -11,23 +11,20 @@ dayjs.extend(weekday);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
-
-// --- I. INITIAL DATA & UTILITIES ---
-
 const InitialEventData = [
   { 
     id: 1, 
     title: "Daily Standup", 
-    date: dayjs().format('YYYY-MM-DD'), // Today's date
+    date: dayjs().format('YYYY-MM-DD'), 
     time: "09:00", 
     durationMinutes: 60, 
-    color: "#4F46E5", // Indigo
+    color: "#4F46E5", 
     description: "Review progress and plan tasks."
   },
   { 
     id: 2, 
     title: "Project Sync (Past)", 
-    date: dayjs().subtract(3, 'day').format('YYYY-MM-DD'), // 3 days in the past
+    date: dayjs().subtract(3, 'day').format('YYYY-MM-DD'), 
     time: "14:00", 
     durationMinutes: 90, 
     color: "#059669", // Emerald
