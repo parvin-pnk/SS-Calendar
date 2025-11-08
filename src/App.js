@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+
 import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
 import weekday from 'dayjs/plugin/weekday';
@@ -7,12 +8,10 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 
 dayjs.extend(isToday);
+
 dayjs.extend(weekday);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
-
-
-
 
 const InitialEventData = [
   { 
@@ -22,7 +21,7 @@ const InitialEventData = [
     time: "09:00", 
     durationMinutes: 60, 
     color: "#4F46E5", 
-    description: "Review progress and plan tasks."
+    description: "Review the progress"
   },
   { 
     id: 2, 
@@ -31,7 +30,7 @@ const InitialEventData = [
     time: "14:00", 
     durationMinutes: 90, 
     color: "#059669", 
-    description: "Deep dive into feature A implementation."
+    description: "Attend interviews."
   },
   { 
     id: 3, 
@@ -40,7 +39,7 @@ const InitialEventData = [
     time: "12:30", 
     durationMinutes: 60, 
     color: "#EAB308", 
-    description: "Time to recharge!"
+    description: "recharge timeuhhhh!"
   },
   { 
     id: 4, 
@@ -49,7 +48,7 @@ const InitialEventData = [
     time: "10:00", 
     durationMinutes: 120, 
     color: "#DC2626", // Red
-    description: "Team meeting for milestone check."
+    description: "Check Check."
   },
   
   { 
@@ -59,7 +58,7 @@ const InitialEventData = [
     time: "10:30",
     durationMinutes: 60, 
     color: "#F97316", 
-    description: "Review final mockups for UI."
+    description: "Check CHeck."
   },
 ];
 
@@ -67,17 +66,11 @@ const InitialEventData = [
 const getDaysInMonth = (date) => {
   const today = dayjs().startOf('day');
   const startOfMonth = dayjs(date).startOf('month');
-  
-  
   const startDay = startOfMonth.weekday(0); 
-
   const days = [];
   let currentDay = startDay;
-
-  
   for (let i = 0; i < 42; i++) {
     const day = currentDay.add(i, 'day');
-    
     days.push({
       date: day.format('YYYY-MM-DD'),
       dayOfMonth: day.date(),
@@ -90,12 +83,8 @@ const getDaysInMonth = (date) => {
   return days;
 };
 
-
-
-
 const Modal = ({ isOpen, title, onClose, children, size = 'max-w-md' }) => {
     if (!isOpen) return null;
-
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
             <div className="flex items-center justify-center min-h-screen p-4">
@@ -116,10 +105,8 @@ const Modal = ({ isOpen, title, onClose, children, size = 'max-w-md' }) => {
         </div>
     );
 };
-
 const ProfileModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
-
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
             <div className="flex items-center justify-center min-h-screen p-4">
@@ -148,8 +135,6 @@ const ProfileModal = ({ isOpen, onClose }) => {
         </div>
     );
 };
-
-
 const SearchModal = ({ isOpen, onClose, onSearchSubmit }) => {
     const [query, setQuery] = useState('');
     
@@ -161,9 +146,7 @@ const SearchModal = ({ isOpen, onClose, onSearchSubmit }) => {
            
         }
     };
-    
     if (!isOpen) return null;
-    
     return (
         <Modal isOpen={isOpen} title="Search Calendar" onClose={onClose}>
             <form onSubmit={handleSearchSubmit} className="space-y-4">
@@ -196,8 +179,6 @@ const SearchModal = ({ isOpen, onClose, onSearchSubmit }) => {
         </Modal>
     );
 };
-
-
 const EventsListViewModal = ({ events, onClose, date, onOpenAddForm, isPast }) => {
     return (
         <div className="space-y-4">
@@ -250,8 +231,6 @@ const EventsListViewModal = ({ events, onClose, date, onOpenAddForm, isPast }) =
         </div>
     );
 };
-
-
 const AddEventForm = ({ selectedDay, onAddEvent, onClose }) => {
     const defaultColor = "#4F46E5"; 
     const [title, setTitle] = useState('');
@@ -416,7 +395,6 @@ const CalendarDay = ({ day, events, onDayClick }) => {
   if (!day.isCurrentMonth) {
     cellBgClass = 'bg-gray-50/50';
   } 
-  
   if (!day.isCurrentMonth) {
     dayNumberClasses += " text-gray-400";
   } else if (day.isToday) {
@@ -454,9 +432,6 @@ const CalendarDay = ({ day, events, onDayClick }) => {
           
           <EventBadge key={event.id} event={event} isPast={day.isPast} />
         ))}
-        
-        
-        
         {remainingEventsCount > 0 && (
           <div className="text-xs text-center text-gray-600 bg-gray-200 rounded-md mt-1 p-0.5 border border-dashed border-gray-400 transition-colors"
               title={`Click to view all ${events.length} events, including ${remainingEventsCount} conflicting or overflowing events.`}>
@@ -467,38 +442,24 @@ const CalendarDay = ({ day, events, onDayClick }) => {
     </div>
   );
 };
-
-
 const TimeSlotEvent = ({ event }) => {
-    
     const MIN_TO_PX = 64 / 60; 
-
     const calculateStyles = () => {
         const start = dayjs(`${event.date} ${event.time}`);
         const startOfDay = start.startOf('day');
-        
-        
         const minutesFromMidnight = start.diff(startOfDay, 'minute'); 
-
-        
         const top = minutesFromMidnight * MIN_TO_PX;
         const height = event.durationMinutes * MIN_TO_PX;
-        
-        
         const finalHeight = Math.max(height, 20); 
-
         return {
             top: `${top}px`,
             height: `${finalHeight}px`,
             backgroundColor: event.color,
             borderColor: event.color,
-            
             opacity: dayjs(event.date).isBefore(dayjs().startOf('day')) ? 0.6 : 1,
         };
     };
-
     const style = calculateStyles();
-    
     return (
         <div 
             className="absolute left-0 w-full rounded-lg text-white p-1 text-xs overflow-hidden border border-l-4 shadow-md hover:shadow-lg cursor-pointer transition-all duration-150 z-20"
@@ -510,15 +471,9 @@ const TimeSlotEvent = ({ event }) => {
         </div>
     );
 };
-
-
-
 const ScheduleView = ({ events, currentDate, onOpenAddForm }) => {
-    
     const startOfMonth = currentDate.startOf('month');
     const endOfMonth = currentDate.endOf('month');
-
-    
     const currentMonthEvents = useMemo(() => {
         return events
             .filter(event => {
@@ -527,18 +482,14 @@ const ScheduleView = ({ events, currentDate, onOpenAddForm }) => {
             })
             .sort((a, b) => dayjs(`${a.date} ${a.time}`).diff(dayjs(`${b.date} ${b.time}`)));
     }, [events, startOfMonth, endOfMonth]);
-
     
     const daysInCurrentMonth = useMemo(() => getDaysInMonth(currentDate), [currentDate]);
     const todayDay = useMemo(() => daysInCurrentMonth.find(d => d.isToday) || daysInCurrentMonth[0], [daysInCurrentMonth]);
-
-
     return (
         <div className="p-4 space-y-6">
             <h3 className="text-2xl font-bold text-gray-800">
                 Schedule View ({currentDate.format('MMMM YYYY')})
             </h3>
-            
             <button
                 onClick={() => onOpenAddForm(todayDay)}
                 className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-colors flex items-center space-x-2"
@@ -582,7 +533,6 @@ const SearchResultsView = ({ results, query }) => {
             <h3 className="text-2xl font-bold text-gray-800">
                 Search Results for: "<span className="text-indigo-600">{query}</span>"
             </h3>
-            
             {results && results.length > 0 ? (
                 <div className="space-y-8">
                     {results.map((category) => (
@@ -612,31 +562,19 @@ const SearchResultsView = ({ results, query }) => {
     );
 };
 
-
-
 const Sidebar = ({ currentDate, setCurrentDate, onOpenAddForm, currentView, setCurrentView }) => {
-    
-    
     const days = useMemo(() => getDaysInMonth(currentDate), [currentDate]);
-    
     const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S']; 
-
     const goToPreviousMonth = useCallback(() => {
         setCurrentDate(prev => prev.subtract(1, 'month'));
     }, [setCurrentDate]);
-
     const goToNextMonth = useCallback(() => {
         setCurrentDate(prev => prev.add(1, 'month'));
     }, [setCurrentDate]);
 
-    
-    const todayDay = useMemo(() => days.find(d => d.isToday) || days[0], [days]);
-    
-    
+    const todayDay = useMemo(() => days.find(d => d.isToday) || days[0], [days]);    
     return (
         <div className="w-64 flex-shrink-0 p-4 border-r overflow-y-auto bg-white h-full hidden lg:block">
-            
-           
             <button
                 onClick={() => onOpenAddForm(todayDay)}
                 className="flex items-center space-x-2 px-6 py-3 bg-white border border-gray-300 rounded-full shadow-lg hover:shadow-xl transition-shadow font-semibold text-gray-700 mb-6"
@@ -646,8 +584,6 @@ const Sidebar = ({ currentDate, setCurrentDate, onOpenAddForm, currentView, setC
                 </svg>
                 <span>Create</span>
             </button>
-            
-            
             <div className="p-2 bg-white">
                 <div className="flex justify-between items-center mb-2">
                     <h4 className="font-semibold text-sm text-gray-700">
@@ -662,8 +598,7 @@ const Sidebar = ({ currentDate, setCurrentDate, onOpenAddForm, currentView, setC
                         </button>
                     </div>
                 </div>
-                
-                
+            
                 <div className="grid grid-cols-7 gap-1 text-center text-xs">
                     {weekdays.map((day, index) => (
                         <div key={index} className="text-gray-500 font-medium">{day}</div>
@@ -691,9 +626,6 @@ const Sidebar = ({ currentDate, setCurrentDate, onOpenAddForm, currentView, setC
                     })}
                 </div>
             </div>
-            
-            
-            
             <div className="mt-6 border-t pt-4 border-gray-200">
                  <h4 className="font-semibold text-xs text-gray-500 mb-2 uppercase">Current View</h4>
                  <div className="flex flex-col space-y-2 text-sm font-medium">
@@ -716,39 +648,25 @@ const Sidebar = ({ currentDate, setCurrentDate, onOpenAddForm, currentView, setC
         </div>
     );
 };
-
-
-
-
 const App = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
   const [events, setEvents] = useState(InitialEventData);
-  
-  
   const [currentView, setCurrentView] = useState('week'); 
-  
- 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedDayForAdd, setSelectedDayForAdd] = useState(null); 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [eventsToView, setEventsToView] = useState([]);
   const [selectedDayForView, setSelectedDayForView] = useState(null);
-  
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); 
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false); 
-  
- 
   const [searchResults, setSearchResults] = useState(null);
   const [lastSearchQuery, setLastSearchQuery] = useState('');
 
-
-  
   const handleCloseViewModal = useCallback(() => {
     setIsViewModalOpen(false);
     setEventsToView([]);
     setSelectedDayForView(null);
   }, []);
-
   const handleOpenAddFormForDate = useCallback((day) => {
     if (day.isPast) {
         console.warn("Cannot add events to a completed day.");
@@ -763,12 +681,9 @@ const App = () => {
     setIsAddModalOpen(false);
     setSelectedDayForAdd(null);
   }, []);
-  
   const handleAddEvent = useCallback((newEvent) => {
     setEvents(prevEvents => [...prevEvents, newEvent]);
   }, []);
-
-  
   const handleDayClick = useCallback((day, eventsOnDate) => {
     
     if (eventsOnDate && eventsOnDate.length > 0) {
@@ -777,48 +692,34 @@ const App = () => {
       setIsViewModalOpen(true);
       return; 
     }
-
-    
     if (!day.isPast) {
       handleOpenAddFormForDate(day);
     } else {
         console.info("Cannot add events to past dates.");
     }
-
   }, [handleOpenAddFormForDate]);
-  
-
   const handleSearchClick = () => {
       setIsSearchModalOpen(true); 
   };
-  
   const handleCloseSearchModal = () => {
       setIsSearchModalOpen(false);
   };
-  
   const handleProfileClick = () => {
       setIsProfileModalOpen(true);
   };
-  
   const handleCloseProfileModal = () => {
       setIsProfileModalOpen(false);
   };
-
- 
   const handleExecuteSearch = useCallback((query) => {
     setLastSearchQuery(query);
     handleCloseSearchModal();
-    
     const lowerQuery = query.toLowerCase();
     let results = [];
-
-    
     const eventMatches = events.filter(e => 
         e.title.toLowerCase().includes(lowerQuery) || 
         e.description.toLowerCase().includes(lowerQuery) ||
         e.date.includes(lowerQuery)
     );
-
     if (eventMatches.length > 0) {
         results.push({
             category: 'Scheduled Events',
@@ -832,8 +733,6 @@ const App = () => {
             }))
         });
     }
-
-    
     if (lowerQuery.includes('holiday') || lowerQuery.includes('christmas') || lowerQuery.includes('year') || results.length === 0) {
         results.push({
             category: 'Public Holidays (Mock)',
@@ -843,19 +742,14 @@ const App = () => {
             ]
         });
     }
-    
     setSearchResults(results);
     setCurrentView('search-results'); 
 }, [events, currentDate]);
-
-  
   const goToPrevious = useCallback(() => {
-    
     if (currentView === 'search-results') {
         setCurrentView('week');
         return;
     }
-    
     setSearchResults(null);
     switch(currentView) {
         case 'day': 
@@ -871,14 +765,11 @@ const App = () => {
             break;
     }
   }, [currentView]);
-
   const goToNext = useCallback(() => {
-    
     if (currentView === 'search-results') {
         setCurrentView('week');
         return;
     }
-
     setSearchResults(null);
     switch(currentView) {
         case 'day': 
@@ -894,16 +785,12 @@ const App = () => {
             break;
     }
   }, [currentView]);
-
   const goToToday = useCallback(() => {
     setSearchResults(null);
     setCurrentDate(dayjs());
     setCurrentView('week'); 
   }, []);
-  
-  
   const daysInMonth = useMemo(() => getDaysInMonth(currentDate), [currentDate]);
-
   const eventsByDate = useMemo(() => {
     return events.reduce((acc, event) => {
       const dateKey = event.date;
@@ -918,20 +805,14 @@ const App = () => {
       return acc;
     }, {});
   }, [events]); 
-
-  
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-
   const headerTitle = useMemo(() => {
     if (currentView === 'search-results') {
         return 'Search Results';
     }
-    
     switch (currentView) {
         case 'day': return currentDate.format('dddd, MMMM D, YYYY');
         case 'week': 
-           
             const startOfWeek = currentDate.startOf('week');
             const endOfWeek = currentDate.endOf('week');
             if (startOfWeek.month() === endOfWeek.month()) {
@@ -943,9 +824,6 @@ const App = () => {
         default: return currentDate.format('MMMM YYYY');
     }
   }, [currentDate, currentView]);
-
-
-  
   const timeGridDays = useMemo(() => {
     if (currentView === 'day') {
         return [currentDate];
@@ -959,30 +837,21 @@ const App = () => {
     }
     return [];
   }, [currentDate, currentView]);
-
-
-  
   return (
     <div className="min-h-screen bg-white font-sans antialiased">
       <div className="w-full h-screen flex flex-col">
-        
-        
         <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white text-gray-800 flex-shrink-0">
           
           <div className="flex items-center space-x-4">
             <h1 className="text-3xl font-extrabold tracking-tight">
-              📅 Calendar
+              Survey Sparrow Calender
             </h1>
-            
-            
             <button 
               onClick={goToToday}
               className="px-3 py-1 text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 rounded-md shadow-sm transition-colors hidden sm:block text-gray-700"
             >
               Today
             </button>
-            
-            
             {currentView !== 'search-results' && (
                 <div className="flex space-x-0.5">
                     <button 
@@ -992,7 +861,6 @@ const App = () => {
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     </button>
-                    
                     <button 
                         onClick={goToNext}
                         className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-600 border border-gray-300"
@@ -1002,19 +870,11 @@ const App = () => {
                     </button>
                 </div>
             )}
-            
           </div>
-
-
-          
           <h2 className="text-xl sm:text-2xl font-normal flex-grow text-left mx-4">
             {headerTitle}
           </h2>
-
-          
           <div className="flex items-center space-x-4">
-            
-            
             <div className='flex space-x-2'>
                 <button 
                     onClick={handleSearchClick} 
@@ -1025,8 +885,6 @@ const App = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 </button>
             </div>
-            
-            
             {currentView !== 'search-results' && (
                 <div className="flex border border-gray-300 rounded-lg overflow-hidden text-xs sm:text-sm font-medium">
                     {['Day', 'Week', 'Month', 'Schedule'].map(view => (
@@ -1044,8 +902,6 @@ const App = () => {
                     ))}
                 </div>
             )}
-
-            
             <button
                 onClick={handleProfileClick} 
                 className="h-8 w-8 bg-pink-300 rounded-full cursor-pointer border-2 border-white hover:ring-2 ring-indigo-300 flex items-center justify-center text-xs font-bold text-white ml-4"
@@ -1055,12 +911,7 @@ const App = () => {
             </button>
           </div>
         </div>
-        
-        
-        
         <div className="flex flex-grow overflow-hidden">
-            
-            
             <Sidebar 
                 currentDate={currentDate} 
                 setCurrentDate={setCurrentDate} 
@@ -1068,14 +919,9 @@ const App = () => {
                 currentView={currentView}
                 setCurrentView={setCurrentView}
             />
-            
-            
             <div className="flex-grow p-0 overflow-y-auto">
-              
-              
               {currentView === 'month' && (
                 <>
-                 
                   <div className="grid grid-cols-7 text-center sticky top-0 bg-white z-10 border-b">
                     {weekdays.map(day => (
                       <div key={day} className="py-3 text-sm font-medium text-gray-500 border-r bg-gray-50 border-gray-200">
@@ -1083,8 +929,6 @@ const App = () => {
                       </div>
                     ))}
                   </div>
-                  
-                 
                   <div className="grid grid-cols-7 border-l border-t border-gray-200">
                     {daysInMonth.map((day, index) => (
                       <CalendarDay 
@@ -1097,8 +941,6 @@ const App = () => {
                   </div>
                 </>
               )}
-
-              
               {currentView === 'schedule' && (
                 <ScheduleView 
                     events={events} 
@@ -1106,18 +948,12 @@ const App = () => {
                     onOpenAddForm={handleOpenAddFormForDate}
                 />
               )}
-              
-              
               {(currentView === 'search-results' && searchResults) && (
                 <SearchResultsView results={searchResults} query={lastSearchQuery} />
               )}
-
-              
               {(currentView === 'day' || currentView === 'week') && (
                 <div className="flex">
-                    
                     <div className='w-16 flex-shrink-0 text-xs text-right text-gray-500 pr-2 pt-16 border-r border-gray-200'>
-                        
                         {Array.from({ length: 24 }).map((_, hour) => (
                             <div key={hour} className="h-16 relative">
                                
@@ -1127,8 +963,6 @@ const App = () => {
                             </div>
                         ))}
                     </div>
-                    
-                    
                     <div className="flex-grow min-h-screen">
                        
                         <div className={`grid border-b border-t border-gray-200 sticky top-0 bg-white z-10`} style={{ gridTemplateColumns: `repeat(${timeGridDays.length}, minmax(0, 1fr))` }}>
@@ -1143,8 +977,7 @@ const App = () => {
                                 </div>
                             ))}
                         </div>
-                        
-                        
+                      
                         <div className={`grid border-l border-r border-gray-200`} style={{ gridTemplateColumns: `repeat(${timeGridDays.length}, minmax(0, 1fr))` }}>
                             {timeGridDays.map((day, index) => (
                                 <div key={day.format('YYYY-MM-DD')} className="border-r border-gray-200 relative">
@@ -1153,12 +986,9 @@ const App = () => {
                                         <div 
                                             key={hour} 
                                             className="h-16 border-b border-dashed border-gray-200 hover:bg-indigo-50/20 cursor-pointer"
-                                        >
-                                            
+                                        >     
                                         </div>
                                     ))}
-                                    
-                                    
                                     {eventsByDate[day.format('YYYY-MM-DD')]?.map(event => (
                                         <TimeSlotEvent key={event.id} event={event} />
                                     ))}
@@ -1172,11 +1002,7 @@ const App = () => {
             </div>
             
         </div>
-        
-      </div>
-      
-      
-      
+      </div>    
       {selectedDayForAdd && (
         <Modal 
           isOpen={isAddModalOpen} 
@@ -1190,9 +1016,6 @@ const App = () => {
           />
         </Modal>
       )}
-
-      
-      
       {selectedDayForView && (
         <Modal 
           isOpen={isViewModalOpen} 
@@ -1209,22 +1032,16 @@ const App = () => {
           />
         </Modal>
       )}
-      
-      
       <ProfileModal 
         isOpen={isProfileModalOpen}
         onClose={handleCloseProfileModal}
       />
-      
-      
       <SearchModal
         isOpen={isSearchModalOpen}
         onClose={handleCloseSearchModal}
         onSearchSubmit={handleExecuteSearch}
       />
-
     </div>
   );
 };
-
 export default App;
