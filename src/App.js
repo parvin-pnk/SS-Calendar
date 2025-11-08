@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback } from 'react';
-
 import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
 import weekday from 'dayjs/plugin/weekday';
@@ -8,29 +7,31 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 
 dayjs.extend(isToday);
-
 dayjs.extend(weekday);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
+
+
+// --- I. INITIAL DATA & UTILITIES ---
 
 const InitialEventData = [
   { 
     id: 1, 
     title: "Daily Standup", 
-    date: dayjs().format('YYYY-MM-DD'), 
+    date: dayjs().format('YYYY-MM-DD'), // Today's date
     time: "09:00", 
     durationMinutes: 60, 
-    color: "#4F46E5", 
-    description: "Review the progress"
+    color: "#4F46E5", // Indigo
+    description: "Review progress and plan tasks."
   },
   { 
     id: 2, 
     title: "Project Sync (Past)", 
-    date: dayjs().subtract(3, 'day').format('YYYY-MM-DD'),
+    date: dayjs().subtract(3, 'day').format('YYYY-MM-DD'), // 3 days in the past
     time: "14:00", 
     durationMinutes: 90, 
-    color: "#059669", 
-    description: "Attend interviews."
+    color: "#059669", // Emerald
+    description: "Deep dive into feature A implementation."
   },
   { 
     id: 3, 
@@ -38,8 +39,8 @@ const InitialEventData = [
     date: dayjs().format('YYYY-MM-DD'),
     time: "12:30", 
     durationMinutes: 60, 
-    color: "#EAB308", 
-    description: "recharge timeuhhhh!"
+    color: "#EAB308", // Yellow
+    description: "Time to recharge!"
   },
   { 
     id: 4, 
@@ -48,17 +49,17 @@ const InitialEventData = [
     time: "10:00", 
     durationMinutes: 120, 
     color: "#DC2626", // Red
-    description: "Check Check."
+    description: "Team meeting for milestone check."
   },
-  
+  // CONFLICT EXAMPLE: Overlapping event on the same day (7 days from now)
   { 
     id: 5, 
     title: "Design Review (Future)", 
     date: dayjs().add(7, 'day').format('YYYY-MM-DD'), 
-    time: "10:30",
+    time: "10:30", // Overlaps with Weekly Catchup (10:00 - 12:00)
     durationMinutes: 60, 
-    color: "#F97316", 
-    description: "Check CHeck."
+    color: "#F97316", // Orange
+    description: "Review final mockups for UI."
   },
 ];
 
@@ -66,11 +67,17 @@ const InitialEventData = [
 const getDaysInMonth = (date) => {
   const today = dayjs().startOf('day');
   const startOfMonth = dayjs(date).startOf('month');
+  
+  // Calculate the day of the week for the first day, then go back to the starting Sunday.
   const startDay = startOfMonth.weekday(0); 
+
   const days = [];
   let currentDay = startDay;
+
+  // Generate 6 weeks (42 days) for a consistent grid
   for (let i = 0; i < 42; i++) {
     const day = currentDay.add(i, 'day');
+    
     days.push({
       date: day.format('YYYY-MM-DD'),
       dayOfMonth: day.date(),
@@ -83,8 +90,12 @@ const getDaysInMonth = (date) => {
   return days;
 };
 
+
+// --- II. MODAL & FORM COMPONENTS ---
+
 const Modal = ({ isOpen, title, onClose, children, size = 'max-w-md' }) => {
     if (!isOpen) return null;
+
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
             <div className="flex items-center justify-center min-h-screen p-4">
@@ -105,8 +116,10 @@ const Modal = ({ isOpen, title, onClose, children, size = 'max-w-md' }) => {
         </div>
     );
 };
+
 const ProfileModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
+
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
             <div className="flex items-center justify-center min-h-screen p-4">
@@ -115,7 +128,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                         <div className="h-12 w-12 bg-pink-300 rounded-full mx-auto mb-4 flex items-center justify-center text-xl font-bold text-white">
                             PK
                         </div>
-                        <h4 className="text-lg font-bold text-gray-800">Praveen</h4>
+                        <h4 className="text-lg font-bold text-gray-800">Praveen Kumar</h4>
                         <p className="text-sm text-gray-500 mb-4">praveenkumar5pnk@outlook.com</p>
                         
                         <div className="space-y-2 border-t pt-4">
@@ -135,6 +148,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
         </div>
     );
 };
+
+// Updated SearchModal to pass query back via onSearchSubmit
 const SearchModal = ({ isOpen, onClose, onSearchSubmit }) => {
     const [query, setQuery] = useState('');
     
@@ -143,10 +158,12 @@ const SearchModal = ({ isOpen, onClose, onSearchSubmit }) => {
         if (query.trim()) {
             onSearchSubmit(query.trim());
             setQuery('');
-           
+            // onClose is handled in onSearchSubmit (handleExecuteSearch)
         }
     };
+    
     if (!isOpen) return null;
+    
     return (
         <Modal isOpen={isOpen} title="Search Calendar" onClose={onClose}>
             <form onSubmit={handleSearchSubmit} className="space-y-4">
@@ -179,6 +196,8 @@ const SearchModal = ({ isOpen, onClose, onSearchSubmit }) => {
         </Modal>
     );
 };
+
+
 const EventsListViewModal = ({ events, onClose, date, onOpenAddForm, isPast }) => {
     return (
         <div className="space-y-4">
@@ -231,10 +250,12 @@ const EventsListViewModal = ({ events, onClose, date, onOpenAddForm, isPast }) =
         </div>
     );
 };
+
+
 const AddEventForm = ({ selectedDay, onAddEvent, onClose }) => {
     const defaultColor = "#4F46E5"; 
     const [title, setTitle] = useState('');
-    const [time, setTime] = useState(dayjs().format('HH:mm')); 
+    const [time, setTime] = useState(dayjs().format('HH:mm')); // Default to current time
     const [durationMinutes, setDurationMinutes] = useState(60);
     const [color, setColor] = useState(defaultColor);
     const [description, setDescription] = useState('');
@@ -248,7 +269,7 @@ const AddEventForm = ({ selectedDay, onAddEvent, onClose }) => {
         }
 
         const newEvent = {
-            id: Date.now(), 
+            id: Date.now(), // Unique ID
             title: title.trim(),
             date: selectedDay.date,
             time: time,
@@ -275,7 +296,7 @@ const AddEventForm = ({ selectedDay, onAddEvent, onClose }) => {
                 Scheduling for: <span className="font-bold text-indigo-600">{selectedDay.dayjsObject.format('ddd, MMM D, YYYY')}</span>
             </h4>
 
-            
+            {/* Title */}
             <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
                 <input
@@ -363,7 +384,7 @@ const AddEventForm = ({ selectedDay, onAddEvent, onClose }) => {
 };
 
 
-
+// --- III. CALENDAR GRID COMPONENTS ---
 
 const EventBadge = ({ event, isPast }) => {
     
@@ -386,8 +407,8 @@ const EventBadge = ({ event, isPast }) => {
 
 const CalendarDay = ({ day, events, onDayClick }) => {
   
-  
-  const baseClasses = "relative h-28 p-1.5 border-b border-r border-gray-200 transition-all duration-300 ease-in-out cursor-pointer group";
+  // Reduced size for mobile, expanded for larger screens
+  const baseClasses = "relative h-20 sm:h-28 p-1.5 border-b border-r border-gray-200 transition-all duration-300 ease-in-out cursor-pointer group";
   
   let dayNumberClasses = "text-sm font-semibold h-6 w-6 flex items-center justify-center rounded-full transition-all duration-300";
   
@@ -395,6 +416,7 @@ const CalendarDay = ({ day, events, onDayClick }) => {
   if (!day.isCurrentMonth) {
     cellBgClass = 'bg-gray-50/50';
   } 
+  
   if (!day.isCurrentMonth) {
     dayNumberClasses += " text-gray-400";
   } else if (day.isToday) {
@@ -418,7 +440,8 @@ const CalendarDay = ({ day, events, onDayClick }) => {
       
       <div className="flex justify-between items-center">
         
-        <span className="text-xs font-medium text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Day name is visible on hover (desktop) or hidden on mobile */}
+        <span className="text-xs font-medium text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
             {day.dayjsObject.format('ddd').toUpperCase()}
         </span>
         <span className={dayNumberClasses}>
@@ -432,6 +455,9 @@ const CalendarDay = ({ day, events, onDayClick }) => {
           
           <EventBadge key={event.id} event={event} isPast={day.isPast} />
         ))}
+        
+        
+        
         {remainingEventsCount > 0 && (
           <div className="text-xs text-center text-gray-600 bg-gray-200 rounded-md mt-1 p-0.5 border border-dashed border-gray-400 transition-colors"
               title={`Click to view all ${events.length} events, including ${remainingEventsCount} conflicting or overflowing events.`}>
@@ -442,24 +468,38 @@ const CalendarDay = ({ day, events, onDayClick }) => {
     </div>
   );
 };
+
+// Component for event rendering inside the Time Grid (Day/Week View)
 const TimeSlotEvent = ({ event }) => {
+    // Height of h-16 is 4rem (64px). 64px / 60 mins = 1.06666...px per minute
     const MIN_TO_PX = 64 / 60; 
+
     const calculateStyles = () => {
         const start = dayjs(`${event.date} ${event.time}`);
         const startOfDay = start.startOf('day');
+        
+        // Total minutes from midnight
         const minutesFromMidnight = start.diff(startOfDay, 'minute'); 
+
+        // Calculate top and height in pixels
         const top = minutesFromMidnight * MIN_TO_PX;
         const height = event.durationMinutes * MIN_TO_PX;
+        
+        // Ensure minimum height for visibility
         const finalHeight = Math.max(height, 20); 
+
         return {
             top: `${top}px`,
             height: `${finalHeight}px`,
             backgroundColor: event.color,
             borderColor: event.color,
+            // Adjust opacity for past events
             opacity: dayjs(event.date).isBefore(dayjs().startOf('day')) ? 0.6 : 1,
         };
     };
+
     const style = calculateStyles();
+    
     return (
         <div 
             className="absolute left-0 w-full rounded-lg text-white p-1 text-xs overflow-hidden border border-l-4 shadow-md hover:shadow-lg cursor-pointer transition-all duration-150 z-20"
@@ -471,9 +511,16 @@ const TimeSlotEvent = ({ event }) => {
         </div>
     );
 };
+
+
+// --- IV. SCHEDULE & SEARCH VIEW COMPONENTS ---
+
 const ScheduleView = ({ events, currentDate, onOpenAddForm }) => {
+    // Determine the view range (e.g., current month)
     const startOfMonth = currentDate.startOf('month');
     const endOfMonth = currentDate.endOf('month');
+
+    // Filter and sort events for the Schedule View
     const currentMonthEvents = useMemo(() => {
         return events
             .filter(event => {
@@ -482,17 +529,21 @@ const ScheduleView = ({ events, currentDate, onOpenAddForm }) => {
             })
             .sort((a, b) => dayjs(`${a.date} ${a.time}`).diff(dayjs(`${b.date} ${b.time}`)));
     }, [events, startOfMonth, endOfMonth]);
-    
+
+    // Helper to find a day object (e.g., for quick add)
     const daysInCurrentMonth = useMemo(() => getDaysInMonth(currentDate), [currentDate]);
     const todayDay = useMemo(() => daysInCurrentMonth.find(d => d.isToday) || daysInCurrentMonth[0], [daysInCurrentMonth]);
+
+
     return (
         <div className="p-4 space-y-6">
-            <h3 className="text-2xl font-bold text-gray-800">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
                 Schedule View ({currentDate.format('MMMM YYYY')})
             </h3>
+            
             <button
                 onClick={() => onOpenAddForm(todayDay)}
-                className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-colors flex items-center space-x-2"
+                className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-colors flex items-center space-x-2 text-sm"
             >
                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
                 <span>Quick Add Event</span>
@@ -506,16 +557,16 @@ const ScheduleView = ({ events, currentDate, onOpenAddForm }) => {
                         const dayObj = dayjs(event.date);
                         return (
                             <div key={event.id} className="flex border-l-4 p-3 rounded-lg shadow-sm hover:shadow-md bg-white transition-shadow" style={{ borderColor: event.color }}>
-                                
-                                <div className="w-28 flex-shrink-0 mr-4 pr-3">
-                                    <p className="text-sm font-bold text-indigo-600">{dayObj.format('ddd, MMM D')}</p>
-                                    <p className="text-base font-semibold text-gray-900 mt-0.5">{event.time}</p>
+                                {/* Date/Time Column */}
+                                <div className="w-24 sm:w-28 flex-shrink-0 mr-4 pr-3">
+                                    <p className="text-xs sm:text-sm font-bold text-indigo-600">{dayObj.format('ddd, MMM D')}</p>
+                                    <p className="text-sm sm:text-base font-semibold text-gray-900 mt-0.5">{event.time}</p>
                                     <p className="text-xs text-gray-500">{event.durationMinutes} min</p>
                                 </div>
-                               
+                                {/* Details Column */}
                                 <div className="flex-grow">
-                                    <h4 className="font-bold text-lg">{event.title}</h4>
-                                    {event.description && <p className="text-sm text-gray-600 mt-1">{event.description}</p>}
+                                    <h4 className="font-bold text-base sm:text-lg">{event.title}</h4>
+                                    {event.description && <p className="text-xs sm:text-sm text-gray-600 mt-1">{event.description}</p>}
                                 </div>
                             </div>
                         );
@@ -526,18 +577,19 @@ const ScheduleView = ({ events, currentDate, onOpenAddForm }) => {
     );
 };
 
-
+// NEW Component: View for Search Results
 const SearchResultsView = ({ results, query }) => {
     return (
-        <div className="p-6 space-y-6">
-            <h3 className="text-2xl font-bold text-gray-800">
+        <div className="p-4 sm:p-6 space-y-6">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
                 Search Results for: "<span className="text-indigo-600">{query}</span>"
             </h3>
+            
             {results && results.length > 0 ? (
-                <div className="space-y-8">
+                <div className="space-y-6 sm:space-y-8">
                     {results.map((category) => (
                         <div key={category.category} className="border-t pt-4">
-                            <h4 className="text-lg font-semibold text-gray-700 mb-3">{category.category} ({category.items.length})</h4>
+                            <h4 className="text-base sm:text-lg font-semibold text-gray-700 mb-3">{category.category} ({category.items.length})</h4>
                             <div className="space-y-3">
                                 {category.items.map(item => (
                                     <div key={item.id} className="flex border-l-4 p-3 rounded-lg shadow-sm bg-white transition-shadow" style={{ borderColor: item.color }}>
@@ -546,7 +598,7 @@ const SearchResultsView = ({ results, query }) => {
                                             {item.time && <p className="text-xs text-gray-500">{item.time}</p>}
                                         </div>
                                         <div className="flex-grow">
-                                            <h5 className="font-bold text-base">{item.title}</h5>
+                                            <h5 className="font-bold text-sm sm:text-base">{item.title}</h5>
                                             {item.description && <p className="text-xs text-gray-500 mt-1">{item.description}</p>}
                                         </div>
                                     </div>
@@ -562,19 +614,32 @@ const SearchResultsView = ({ results, query }) => {
     );
 };
 
+// --- V. SIDEBAR COMPONENT (Hidden on Mobile) ---
+
 const Sidebar = ({ currentDate, setCurrentDate, onOpenAddForm, currentView, setCurrentView }) => {
+    
+    // Get mini-calendar data
     const days = useMemo(() => getDaysInMonth(currentDate), [currentDate]);
+    
     const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S']; 
+
     const goToPreviousMonth = useCallback(() => {
         setCurrentDate(prev => prev.subtract(1, 'month'));
     }, [setCurrentDate]);
+
     const goToNextMonth = useCallback(() => {
         setCurrentDate(prev => prev.add(1, 'month'));
     }, [setCurrentDate]);
 
-    const todayDay = useMemo(() => days.find(d => d.isToday) || days[0], [days]);    
+    // Find the day object for today to pass to AddForm
+    const todayDay = useMemo(() => days.find(d => d.isToday) || days[0], [days]);
+    
+    
     return (
+        // Hidden on small screens, shown on large screens
         <div className="w-64 flex-shrink-0 p-4 border-r overflow-y-auto bg-white h-full hidden lg:block">
+            
+            {/* 1. Create Button */}
             <button
                 onClick={() => onOpenAddForm(todayDay)}
                 className="flex items-center space-x-2 px-6 py-3 bg-white border border-gray-300 rounded-full shadow-lg hover:shadow-xl transition-shadow font-semibold text-gray-700 mb-6"
@@ -584,6 +649,8 @@ const Sidebar = ({ currentDate, setCurrentDate, onOpenAddForm, currentView, setC
                 </svg>
                 <span>Create</span>
             </button>
+            
+            {/* 2. Mini-Calendar */}
             <div className="p-2 bg-white">
                 <div className="flex justify-between items-center mb-2">
                     <h4 className="font-semibold text-sm text-gray-700">
@@ -598,7 +665,8 @@ const Sidebar = ({ currentDate, setCurrentDate, onOpenAddForm, currentView, setC
                         </button>
                     </div>
                 </div>
-            
+                
+                {/* Mini Calendar Grid */}
                 <div className="grid grid-cols-7 gap-1 text-center text-xs">
                     {weekdays.map((day, index) => (
                         <div key={index} className="text-gray-500 font-medium">{day}</div>
@@ -626,6 +694,9 @@ const Sidebar = ({ currentDate, setCurrentDate, onOpenAddForm, currentView, setC
                     })}
                 </div>
             </div>
+            
+            
+            {/* View Selector (Kept for navigation) */}
             <div className="mt-6 border-t pt-4 border-gray-200">
                  <h4 className="font-semibold text-xs text-gray-500 mb-2 uppercase">Current View</h4>
                  <div className="flex flex-col space-y-2 text-sm font-medium">
@@ -648,25 +719,96 @@ const Sidebar = ({ currentDate, setCurrentDate, onOpenAddForm, currentView, setC
         </div>
     );
 };
+
+// NEW COMPONENT: Mobile Sidebar Drawer
+const MobileSidebarDrawer = ({ isOpen, onClose, currentView, setCurrentView }) => {
+    
+    const views = [
+        { name: 'Day', value: 'day' },
+        { name: 'Week', value: 'week' },
+        { name: 'Month', value: 'month' },
+        { name: 'Schedule', value: 'schedule' },
+    ];
+
+    const handleViewSelect = (view) => {
+        setCurrentView(view);
+        onClose();
+    };
+
+    return (
+        <div 
+            className={`fixed inset-0 z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+            onClick={onClose} 
+        >
+            <div 
+                className={`fixed top-0 left-0 h-full w-64 bg-white shadow-xl transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the drawer
+            >
+                <div className="p-4 border-b flex justify-between items-center">
+                    <h3 className="text-xl font-bold text-gray-800">Menu</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div className="p-4 space-y-2">
+                    {views.map(view => (
+                        <button
+                            key={view.value}
+                            onClick={() => handleViewSelect(view.value)}
+                            className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-base font-medium ${
+                                currentView === view.value 
+                                    ? 'bg-indigo-100 text-indigo-700 font-semibold' 
+                                    : 'hover:bg-gray-100 text-gray-700'
+                            }`}
+                        >
+                            {view.name} View
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+// --- VI. MAIN APP COMPONENT ---
+
 const App = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
   const [events, setEvents] = useState(InitialEventData);
+  
+  // View States
   const [currentView, setCurrentView] = useState('week'); 
+  
+  // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedDayForAdd, setSelectedDayForAdd] = useState(null); 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [eventsToView, setEventsToView] = useState([]);
   const [selectedDayForView, setSelectedDayForView] = useState(null);
+  
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); 
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false); 
+  
+  // NEW State for Mobile Menu Drawer
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // NEW State for Search Results
   const [searchResults, setSearchResults] = useState(null);
   const [lastSearchQuery, setLastSearchQuery] = useState('');
 
+
+  // --- Modal Handlers ---
   const handleCloseViewModal = useCallback(() => {
     setIsViewModalOpen(false);
     setEventsToView([]);
     setSelectedDayForView(null);
   }, []);
+
   const handleOpenAddFormForDate = useCallback((day) => {
     if (day.isPast) {
         console.warn("Cannot add events to a completed day.");
@@ -681,9 +823,12 @@ const App = () => {
     setIsAddModalOpen(false);
     setSelectedDayForAdd(null);
   }, []);
+  
   const handleAddEvent = useCallback((newEvent) => {
     setEvents(prevEvents => [...prevEvents, newEvent]);
   }, []);
+
+  
   const handleDayClick = useCallback((day, eventsOnDate) => {
     
     if (eventsOnDate && eventsOnDate.length > 0) {
@@ -692,34 +837,58 @@ const App = () => {
       setIsViewModalOpen(true);
       return; 
     }
+
+    
     if (!day.isPast) {
       handleOpenAddFormForDate(day);
     } else {
         console.info("Cannot add events to past dates.");
     }
+
   }, [handleOpenAddFormForDate]);
+  
+  // Handlers for Header Icons
   const handleSearchClick = () => {
       setIsSearchModalOpen(true); 
   };
+  
   const handleCloseSearchModal = () => {
       setIsSearchModalOpen(false);
   };
+  
   const handleProfileClick = () => {
       setIsProfileModalOpen(true);
   };
+  
   const handleCloseProfileModal = () => {
       setIsProfileModalOpen(false);
   };
+  
+  // Mobile Menu Handlers
+  const handleToggleMobileMenu = () => {
+      setIsMobileMenuOpen(prev => !prev);
+  };
+  
+  const handleCloseMobileMenu = () => {
+      setIsMobileMenuOpen(false);
+  };
+
+
+  // NEW: Search Execution Logic
   const handleExecuteSearch = useCallback((query) => {
     setLastSearchQuery(query);
     handleCloseSearchModal();
+    
     const lowerQuery = query.toLowerCase();
     let results = [];
+
+    // 1. Filter events based on title/description
     const eventMatches = events.filter(e => 
         e.title.toLowerCase().includes(lowerQuery) || 
         e.description.toLowerCase().includes(lowerQuery) ||
         e.date.includes(lowerQuery)
     );
+
     if (eventMatches.length > 0) {
         results.push({
             category: 'Scheduled Events',
@@ -733,6 +902,8 @@ const App = () => {
             }))
         });
     }
+
+    // 2. Mock holiday results (always show a few based on keywords or if the list is empty)
     if (lowerQuery.includes('holiday') || lowerQuery.includes('christmas') || lowerQuery.includes('year') || results.length === 0) {
         results.push({
             category: 'Public Holidays (Mock)',
@@ -742,14 +913,19 @@ const App = () => {
             ]
         });
     }
+    
     setSearchResults(results);
-    setCurrentView('search-results'); 
+    setCurrentView('search-results'); // Switch view to display results
 }, [events, currentDate]);
+
+  // --- Date Navigation Logic (Updated for all views) ---
   const goToPrevious = useCallback(() => {
+    // Clear search results when navigating away from the current view
     if (currentView === 'search-results') {
         setCurrentView('week');
         return;
     }
+    
     setSearchResults(null);
     switch(currentView) {
         case 'day': 
@@ -765,11 +941,14 @@ const App = () => {
             break;
     }
   }, [currentView]);
+
   const goToNext = useCallback(() => {
+    // Clear search results when navigating away from the current view
     if (currentView === 'search-results') {
         setCurrentView('week');
         return;
     }
+
     setSearchResults(null);
     switch(currentView) {
         case 'day': 
@@ -785,12 +964,16 @@ const App = () => {
             break;
     }
   }, [currentView]);
+
   const goToToday = useCallback(() => {
     setSearchResults(null);
     setCurrentDate(dayjs());
-    setCurrentView('week'); 
+    setCurrentView('week'); // Setting default view to 'week' to match the image
   }, []);
+  
+  // --- Data & Memoization ---
   const daysInMonth = useMemo(() => getDaysInMonth(currentDate), [currentDate]);
+
   const eventsByDate = useMemo(() => {
     return events.reduce((acc, event) => {
       const dateKey = event.date;
@@ -805,31 +988,61 @@ const App = () => {
       return acc;
     }, {});
   }, [events]); 
+
+  // NEW: Check if the currently viewed period (day, week, or month) contains 'today'
+  const isViewingCurrentPeriod = useMemo(() => {
+    const today = dayjs();
+    // If not in a calendar view, don't highlight the title
+    if (currentView === 'search-results') return false; 
+    
+    // Check based on the current view scope
+    if (currentView === 'day') {
+        return currentDate.isSame(today, 'day');
+    } else if (currentView === 'week') {
+        // Check if today falls between the start and end of the current week view
+        return today.isSameOrAfter(currentDate.startOf('week'), 'day') && 
+               today.isSameOrBefore(currentDate.endOf('week'), 'day');
+    } else { // 'month' and 'schedule' view
+        return currentDate.isSame(today, 'month');
+    }
+  }, [currentDate, currentView]);
+
+
+  // --- Render Helpers ---
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  // Dynamically determine the header title based on view
   const headerTitle = useMemo(() => {
     if (currentView === 'search-results') {
         return 'Search Results';
     }
+    
     switch (currentView) {
         case 'day': return currentDate.format('dddd, MMMM D, YYYY');
         case 'week': 
+            // Calculate week range for header, e.g., "Oct 27 - Nov 2, 2025"
             const startOfWeek = currentDate.startOf('week');
             const endOfWeek = currentDate.endOf('week');
             if (startOfWeek.month() === endOfWeek.month()) {
+                // If start and end month are the same, show just the month and year
                 return startOfWeek.format('MMMM YYYY'); 
             }
+            // Otherwise show the range: e.g., "Oct 27 - Nov 2, 2025"
             return `${startOfWeek.format('MMM D')} - ${endOfWeek.format('MMM D, YYYY')}`;
         case 'month':
         case 'schedule':
         default: return currentDate.format('MMMM YYYY');
     }
   }, [currentDate, currentView]);
+
+
+  // Determine the dates to display for Day/Week view
   const timeGridDays = useMemo(() => {
     if (currentView === 'day') {
         return [currentDate];
     } else if (currentView === 'week') {
         let days = [];
-        let startOfWeek = currentDate.startOf('week'); 
+        let startOfWeek = currentDate.startOf('week'); // Sunday
         for (let i = 0; i < 7; i++) {
             days.push(startOfWeek.add(i, 'day'));
         }
@@ -837,21 +1050,45 @@ const App = () => {
     }
     return [];
   }, [currentDate, currentView]);
+
+
+  // --- RENDER ---
   return (
     <div className="min-h-screen bg-white font-sans antialiased">
       <div className="w-full h-screen flex flex-col">
+        
+        {/* TOP HEADER (Dashboard Style) */}
         <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white text-gray-800 flex-shrink-0">
           
-          <div className="flex items-center space-x-4">
-            <h1 className="text-3xl font-extrabold tracking-tight">
-              Survey Sparrow Calender
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            
+            {/* 1. Mobile Menu/Dashboard Icon (Visible on small screens) */}
+            <button 
+                onClick={handleToggleMobileMenu}
+                className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-600 sm:hidden"
+                aria-label="Open Calendar Menu"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            
+            {/* Desktop Title with Icon */}
+            <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight hidden sm:block">
+              📅 Calendar
             </h1>
+            {/* Mobile Title (Removed) */}
+            <h1 className="text-xl font-extrabold tracking-tight hidden sm:hidden">
+              {/* Intentional empty space for alignment, or use a responsive class on the next element if this causes issues */}
+            </h1>
+            
+            {/* Navigation Buttons */}
             <button 
               onClick={goToToday}
-              className="px-3 py-1 text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 rounded-md shadow-sm transition-colors hidden sm:block text-gray-700"
+              className="px-2 py-1 text-xs sm:text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 rounded-md shadow-sm transition-colors text-gray-700 whitespace-nowrap"
             >
               Today
             </button>
+            
+            {/* Show navigation only when not in search view */}
             {currentView !== 'search-results' && (
                 <div className="flex space-x-0.5">
                     <button 
@@ -861,6 +1098,7 @@ const App = () => {
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     </button>
+                    
                     <button 
                         onClick={goToNext}
                         className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-600 border border-gray-300"
@@ -870,14 +1108,25 @@ const App = () => {
                     </button>
                 </div>
             )}
+            
           </div>
-          <h2 className="text-xl sm:text-2xl font-normal flex-grow text-left mx-4">
+
+
+          {/* Center Date Title (Highlighted if viewing current period) */}
+          {/* Note: In mobile view, this naturally expands to fill the space left by the removed title */}
+          <h2 className={`text-sm sm:text-2xl flex-grow text-left mx-2 sm:mx-4 truncate 
+              ${isViewingCurrentPeriod ? 'font-bold text-indigo-600' : 'font-normal text-gray-800'}`
+          }>
             {headerTitle}
           </h2>
-          <div className="flex items-center space-x-4">
+
+          {/* Right Section: Actions & View Selector */}
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            
+            {/* Search Icon (INTERACTIVE) */}
             <div className='flex space-x-2'>
                 <button 
-                    onClick={handleSearchClick} 
+                    onClick={handleSearchClick} // Opens Search Modal
                     className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600" 
                     aria-label="Search Public Holidays and Events"
                     title="Search public holidays and events" 
@@ -885,13 +1134,15 @@ const App = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 </button>
             </div>
+            
+            {/* View Selector (Hidden on mobile, shown on desktop) */}
             {currentView !== 'search-results' && (
-                <div className="flex border border-gray-300 rounded-lg overflow-hidden text-xs sm:text-sm font-medium">
+                <div className="hidden sm:flex border border-gray-300 rounded-lg overflow-hidden text-sm font-medium">
                     {['Day', 'Week', 'Month', 'Schedule'].map(view => (
                         <button
                             key={view}
                             onClick={() => {setCurrentView(view.toLowerCase()); setSearchResults(null);}}
-                            className={`px-2 py-1 sm:px-3 sm:py-1.5 transition-colors whitespace-nowrap border-l border-gray-300 first:border-l-0 ${
+                            className={`px-3 py-1.5 transition-colors whitespace-nowrap border-l border-gray-300 first:border-l-0 ${
                                 currentView === view.toLowerCase() 
                                     ? 'bg-indigo-600 text-white shadow-inner' 
                                     : 'hover:bg-gray-100 text-gray-700 bg-white'
@@ -902,6 +1153,8 @@ const App = () => {
                     ))}
                 </div>
             )}
+
+            {/* Profile (INTERACTIVE) */}
             <button
                 onClick={handleProfileClick} 
                 className="h-8 w-8 bg-pink-300 rounded-full cursor-pointer border-2 border-white hover:ring-2 ring-indigo-300 flex items-center justify-center text-xs font-bold text-white ml-4"
@@ -911,7 +1164,12 @@ const App = () => {
             </button>
           </div>
         </div>
+        
+        
+        {/* MAIN BODY: SIDEBAR + CONTENT GRID */}
         <div className="flex flex-grow overflow-hidden">
+            
+            {/* LEFT SIDEBAR (Hidden on mobile, only desktop usage) */}
             <Sidebar 
                 currentDate={currentDate} 
                 setCurrentDate={setCurrentDate} 
@@ -919,16 +1177,23 @@ const App = () => {
                 currentView={currentView}
                 setCurrentView={setCurrentView}
             />
+            
+            {/* RIGHT MAIN CONTENT AREA - GRID/TIMELINE */}
             <div className="flex-grow p-0 overflow-y-auto">
+              
+              {/* MONTH VIEW (Default Calendar Grid) */}
               {currentView === 'month' && (
                 <>
+                  {/* WEEKDAY HEADERS */}
                   <div className="grid grid-cols-7 text-center sticky top-0 bg-white z-10 border-b">
                     {weekdays.map(day => (
-                      <div key={day} className="py-3 text-sm font-medium text-gray-500 border-r bg-gray-50 border-gray-200">
+                      <div key={day} className="py-2 sm:py-3 text-sm font-medium text-gray-500 border-r bg-gray-50 border-gray-200">
                         {day}
                       </div>
                     ))}
                   </div>
+                  
+                  {/* CALENDAR DAYS GRID */}
                   <div className="grid grid-cols-7 border-l border-t border-gray-200">
                     {daysInMonth.map((day, index) => (
                       <CalendarDay 
@@ -941,6 +1206,8 @@ const App = () => {
                   </div>
                 </>
               )}
+
+              {/* SCHEDULE VIEW (List of events) */}
               {currentView === 'schedule' && (
                 <ScheduleView 
                     events={events} 
@@ -948,23 +1215,32 @@ const App = () => {
                     onOpenAddForm={handleOpenAddFormForDate}
                 />
               )}
+              
+              {/* SEARCH RESULTS VIEW */}
               {(currentView === 'search-results' && searchResults) && (
                 <SearchResultsView results={searchResults} query={lastSearchQuery} />
               )}
+
+              {/* DAY/WEEK VIEW (Timeline Grid with Events) */}
               {(currentView === 'day' || currentView === 'week') && (
-                <div className="flex">
-                    <div className='w-16 flex-shrink-0 text-xs text-right text-gray-500 pr-2 pt-16 border-r border-gray-200'>
+                // Horizontal scroll for mobile/small viewports
+                <div className="flex overflow-x-auto">
+                    {/* Time Column */}
+                    <div className='w-16 flex-shrink-0 text-xs text-right text-gray-500 pr-2 pt-16 border-r border-gray-200 sticky left-0 bg-white z-20 h-full'>
+                        {/* Generate time slots from 12 AM (00:00) to 11 PM (23:00) */}
                         {Array.from({ length: 24 }).map((_, hour) => (
                             <div key={hour} className="h-16 relative">
-                               
+                                {/* Display time label offset slightly above the hour line */}
                                 <span className='absolute -top-2 right-0'>
                                     {hour === 0 ? '12 AM' : hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour - 12} PM`}
                                 </span>
                             </div>
                         ))}
                     </div>
-                    <div className="flex-grow min-h-screen">
-                       
+                    
+                    {/* Event Grid Columns - Added min-w for horizontal scrolling in mobile view */}
+                    <div className={`flex-grow min-h-screen ${currentView === 'week' ? 'min-w-[700px] lg:min-w-0' : 'min-w-[400px] lg:min-w-0'}`}>
+                        {/* Day/Week Headers */}
                         <div className={`grid border-b border-t border-gray-200 sticky top-0 bg-white z-10`} style={{ gridTemplateColumns: `repeat(${timeGridDays.length}, minmax(0, 1fr))` }}>
                             {timeGridDays.map((day, index) => (
                                 <div key={index} className="py-3 text-center border-r border-gray-200 bg-gray-50">
@@ -977,18 +1253,22 @@ const App = () => {
                                 </div>
                             ))}
                         </div>
-                      
+                        
+                        {/* Timeline and Events */}
                         <div className={`grid border-l border-r border-gray-200`} style={{ gridTemplateColumns: `repeat(${timeGridDays.length}, minmax(0, 1fr))` }}>
                             {timeGridDays.map((day, index) => (
                                 <div key={day.format('YYYY-MM-DD')} className="border-r border-gray-200 relative">
-                                    
+                                    {/* Timeline Lines (24 hours * h-16 = 24 * 64px = 1536px height) */}
                                     {Array.from({ length: 24 }).map((_, hour) => (
                                         <div 
                                             key={hour} 
                                             className="h-16 border-b border-dashed border-gray-200 hover:bg-indigo-50/20 cursor-pointer"
-                                        >     
+                                        >
+                                            {/* Clickable area for quick add */}
                                         </div>
                                     ))}
+                                    
+                                    {/* Events for this day */}
                                     {eventsByDate[day.format('YYYY-MM-DD')]?.map(event => (
                                         <TimeSlotEvent key={event.id} event={event} />
                                     ))}
@@ -1002,7 +1282,11 @@ const App = () => {
             </div>
             
         </div>
-      </div>    
+        
+      </div>
+      
+      
+      {/* ADD EVENT MODAL */}
       {selectedDayForAdd && (
         <Modal 
           isOpen={isAddModalOpen} 
@@ -1016,6 +1300,9 @@ const App = () => {
           />
         </Modal>
       )}
+
+      
+      {/* VIEW EVENTS MODAL */}
       {selectedDayForView && (
         <Modal 
           isOpen={isViewModalOpen} 
@@ -1032,16 +1319,30 @@ const App = () => {
           />
         </Modal>
       )}
+      
+      {/* PROFILE MODAL (Updated) */}
       <ProfileModal 
         isOpen={isProfileModalOpen}
         onClose={handleCloseProfileModal}
       />
+      
+      {/* SEARCH MODAL (Updated with onSearchSubmit) */}
       <SearchModal
         isOpen={isSearchModalOpen}
         onClose={handleCloseSearchModal}
         onSearchSubmit={handleExecuteSearch}
       />
+      
+      {/* MOBILE SIDEBAR DRAWER (NEW) */}
+      <MobileSidebarDrawer 
+        isOpen={isMobileMenuOpen}
+        onClose={handleCloseMobileMenu}
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+      />
+
     </div>
   );
 };
+
 export default App;
