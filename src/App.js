@@ -128,7 +128,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                         <div className="h-12 w-12 bg-pink-300 rounded-full mx-auto mb-4 flex items-center justify-center text-xl font-bold text-white">
                             PK
                         </div>
-                        <h4 className="text-lg font-bold text-gray-800">Praveen Kumar</h4>
+                        <h4 className="text-lg font-bold text-gray-800">Praveen</h4>
                         <p className="text-sm text-gray-500 mb-4">praveenkumar5pnk@outlook.com</p>
                         
                         <div className="space-y-2 border-t pt-4">
